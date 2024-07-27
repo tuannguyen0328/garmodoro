@@ -17,6 +17,11 @@ class GarmodoroBackground extends Sys.ServiceDelegate {
         }
     }
 
+    function onTemporalEvent() {
+        // Handle timing logic here
+        Sys.println("Background service triggered by temporal event.");
+    }
+
     function onStop() {
         // Handle cleanup when the background service stops
     }

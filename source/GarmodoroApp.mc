@@ -44,6 +44,9 @@ class GarmodoroApp extends App.AppBase {
             minutes = App.getApp().getProperty("pomodoroLength");
             pomodoroNumber = 1;
         }
+
+        // Register temporal event for background timing
+        Bg.registerForTemporalEvent(new Time.Duration(5 * 60)); // Every 5 minutes
     }
 
     function onStop(state) {
@@ -62,6 +65,26 @@ class GarmodoroApp extends App.AppBase {
 
     function getServiceDelegate() {
         return [new GarmodoroBackground()];
+    }
+
+    function onEnterSleep() {
+        // Terminate any active timers and prepare for slow updates
+        if (isPomodoroTimerRunning) {
+            timer.stop();
+        }
+        if (isTickTimerRunning) {
+            tickTimer.stop();
+        }
+    }
+
+    function onExitSleep() {
+        // The user has just looked at their watch. Timers and animations may be started here
+        if (isPomodoroTimerRunning) {
+            timer.start(method(:pomodoroCallback), 60 * 1000, true);
+        }
+        if (isTickTimerRunning) {
+            tickTimer.start(method(:idleCallback), 1000, true);
+        }
     }
 
     function pomodoroCallback() {

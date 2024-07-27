@@ -1,6 +1,7 @@
 using Toybox.Application as App;
 using Toybox.Attention as Attention;
 using Toybox.WatchUi as Ui;
+using Toybox.Timer as Timer;
 
 var timer;
 var tickTimer;
@@ -36,6 +37,8 @@ function resetMinutes() {
 class GarmodoroDelegate extends Ui.BehaviorDelegate {
     function initialize() {
         Ui.BehaviorDelegate.initialize();
+        timer = new Timer.Timer();
+        tickTimer = new Timer.Timer();
         timer.start(method(:idleCallback), 60 * 1000, true);
     }
 
