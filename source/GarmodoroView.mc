@@ -1,6 +1,7 @@
 using Toybox.WatchUi as Ui;
 using Toybox.Graphics as Gfx;
 using Toybox.Time as Time;
+using Toybox.System as Sys;
 
 class GarmodoroView extends Ui.View {
     var isPomodoroTimerStarted;
@@ -53,5 +54,16 @@ class GarmodoroView extends Ui.View {
             today.hour.format("%02d"),
             today.min.format("%02d"),
         ]);
+    }
+
+    function onTap(event) {
+        Sys.println("onTap event: " + event);
+        if (!self.isPomodoroTimerStarted) {
+            self.isPomodoroTimerStarted = true;
+            // Start the timer
+            Ui.requestUpdate();
+        } else {
+            // Handle other touch interactions if needed
+        }
     }
 }

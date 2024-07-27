@@ -1,7 +1,6 @@
 using Toybox.Application as App;
 using Toybox.Timer as Timer;
 using Toybox.WatchUi as Ui;
-using Toybox.System as Sys;
 
 class GarmodoroApp extends App.AppBase {
     var timer;
@@ -46,10 +45,12 @@ class GarmodoroApp extends App.AppBase {
     }
 
     function onStop(state) {
-        state.put("isPomodoroTimerRunning", isPomodoroTimerRunning);
-        state.put("isTickTimerRunning", isTickTimerRunning);
-        state.put("minutes", minutes);
-        state.put("pomodoroNumber", pomodoroNumber);
+        if (state != null) {
+            state.put("isPomodoroTimerRunning", isPomodoroTimerRunning);
+            state.put("isTickTimerRunning", isTickTimerRunning);
+            state.put("minutes", minutes);
+            state.put("pomodoroNumber", pomodoroNumber);
+        }
 
         if (tickTimer != null) {
             tickTimer.stop();
