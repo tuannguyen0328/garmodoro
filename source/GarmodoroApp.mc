@@ -61,7 +61,7 @@ class GarmodoroApp extends App.AppBase {
     }
 
     function getInitialView() {
-        return [new GarmodoroView(isPomodoroTimerRunning, isTickTimerRunning, minutes, pomodoroNumber), new GarmodoroDelegate()];
+        return [new GarmodoroView(), new GarmodoroDelegate()];
     }
 
     function pomodoroCallback() {

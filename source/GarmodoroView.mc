@@ -1,69 +1,102 @@
 using Toybox.WatchUi as Ui;
 using Toybox.Graphics as Gfx;
-using Toybox.Time as Time;
-using Toybox.System as Sys;
+using Toybox.System as System;
+using Toybox.Time;
+using Toybox.Time.Gregorian;
+using Toybox.Lang;
 
 class GarmodoroView extends Ui.View {
-    var isPomodoroTimerStarted;
-    var isBreakTimerStarted;
-    var minutes;
-    var pomodoroNumber;
+	hidden var pomodoroSubtitle;
+	hidden var shortBreakLabel;
+	hidden var longBreakLabel;
+	hidden var readyLabel;
 
-    function initialize(isPomodoroTimerStarted, isBreakTimerStarted, minutes, pomodoroNumber) {
-        self.isPomodoroTimerStarted = isPomodoroTimerStarted;
-        self.isBreakTimerStarted = isBreakTimerStarted;
-        self.minutes = minutes;
-        self.pomodoroNumber = pomodoroNumber;
-    }
+	hidden var centerX;
+	hidden var centerY;
 
-    function onUpdate(dc) {
-        dc.clear();
+	hidden var pomodoroOffset;
+	hidden var captionOffset;
+	hidden var readyLabelOffset;
+	hidden var minutesOffset;
+	hidden var timeOffset;
 
-        if (self.isPomodoroTimerStarted) {
-            dc.setColor(Gfx.COLOR_RED, Gfx.COLOR_TRANSPARENT);
-            drawMinutes(dc);
-            dc.setColor(Gfx.COLOR_ORANGE, Gfx.COLOR_TRANSPARENT);
-            drawCaption(dc);
-        } else {
-            dc.setColor(Gfx.COLOR_ORANGE, Gfx.COLOR_TRANSPARENT);
-            dc.drawText(dc.getWidth() / 2, dc.getHeight() / 4, Gfx.FONT_LARGE, "Ready", Gfx.TEXT_JUSTIFY_CENTER);
-        }
+	function initialize() {
+		View.initialize();
+	}
 
-        if (!self.isBreakTimerStarted) {
-            dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);
-            dc.drawText(dc.getWidth() / 2, dc.getHeight() / 2, Gfx.FONT_MEDIUM, "Pomodoro #" + self.pomodoroNumber, Gfx.TEXT_JUSTIFY_CENTER);
-        }
+	function onLayout( dc ) {
+		pomodoroSubtitle = Ui.loadResource( Rez.Strings.PomodoroSubtitle );
+		shortBreakLabel = Ui.loadResource( Rez.Strings.ShortBreakLabel );
+		longBreakLabel = Ui.loadResource( Rez.Strings.LongBreakLabel );
+		readyLabel = Ui.loadResource( Rez.Strings.ReadyLabel );
 
-        dc.setColor(Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT);
-        dc.drawText(dc.getWidth() / 2, 3 * dc.getHeight() / 4, Gfx.FONT_NUMBER_MILD, getTime(), Gfx.TEXT_JUSTIFY_CENTER);
-    }
+		var height = dc.getHeight();
+		centerX = dc.getWidth() / 2;
+		centerY = height / 2;
+		var mediumOffset = Gfx.getFontHeight( Gfx.FONT_MEDIUM );
+		var mildOffset = Gfx.getFontHeight( Gfx.FONT_NUMBER_MILD );
+		var screenShape = System.getDeviceSettings().screenShape;
 
-    hidden function drawMinutes(dc) {
-        dc.drawText(dc.getWidth() / 2, 3 * dc.getHeight() / 4 - 30, Gfx.FONT_NUMBER_THAI_HOT, self.minutes.format("%02d"), Gfx.TEXT_JUSTIFY_CENTER);
-    }
+		me.timeOffset = height - mildOffset;
+		me.pomodoroOffset = 5;
+		if ( System.SCREEN_SHAPE_RECTANGLE != screenShape ) {
+			me.pomodoroOffset += mediumOffset;
+			me.timeOffset -= 5;
+		}
 
-    hidden function drawCaption(dc) {
-        dc.drawText(dc.getWidth() / 2, 3 * dc.getHeight() / 4 - 60, Gfx.FONT_TINY, "Pomodoro Timer", Gfx.TEXT_JUSTIFY_CENTER);
-    }
+		me.readyLabelOffset = me.centerY - ( Gfx.getFontHeight( Gfx.FONT_LARGE ) / 2 );
+		me.minutesOffset = me.centerY - ( Gfx.getFontHeight( Gfx.FONT_NUMBER_THAI_HOT ) / 2 );
+		me.captionOffset = me.timeOffset - Gfx.getFontHeight( Gfx.FONT_TINY );
+	}
 
-    function onHide() {}
+	function onShow() {
+	}
 
-    function getTime() {
-        var today = Time.Gregorian.info(Time.now(), Time.FORMAT_SHORT);
-        return Lang.format("$1$:$2$", [
-            today.hour.format("%02d"),
-            today.min.format("%02d"),
-        ]);
-    }
+	function onUpdate( dc ) {
+		dc.setColor( Gfx.COLOR_TRANSPARENT, Gfx.COLOR_BLACK );
+		dc.clear();
+		if ( isBreakTimerStarted ) {
+			dc.setColor( Gfx.COLOR_GREEN, Gfx.COLOR_TRANSPARENT );
+			dc.drawText( me.centerX, me.pomodoroOffset, Gfx.FONT_MEDIUM, isLongBreak() ? me.longBreakLabel : me.shortBreakLabel, Gfx.TEXT_JUSTIFY_CENTER );
+			me.drawMinutes( dc );
 
-    function onTap(event) {
-        Sys.println("onTap event: " + event);
-        if (!self.isPomodoroTimerStarted) {
-            self.isPomodoroTimerStarted = true;
-            // Start the timer
-            Ui.requestUpdate();
-        } else {
-            // Handle other touch interactions if needed
-        }
-    }
+			dc.setColor( Gfx.COLOR_DK_GREEN, Gfx.COLOR_TRANSPARENT );
+			me.drawCaption( dc );
+		} else if ( isPomodoroTimerStarted ) {
+			dc.setColor( Gfx.COLOR_YELLOW, Gfx.COLOR_TRANSPARENT );
+			me.drawMinutes( dc );
+			dc.setColor( Gfx.COLOR_ORANGE, Gfx.COLOR_TRANSPARENT );
+			me.drawCaption( dc );
+		} else {
+			dc.setColor( Gfx.COLOR_ORANGE, Gfx.COLOR_TRANSPARENT );
+			dc.drawText( me.centerX, me.readyLabelOffset, Gfx.FONT_LARGE, me.readyLabel, Gfx.TEXT_JUSTIFY_CENTER );
+		}
+
+		if ( ! isBreakTimerStarted ) {
+			dc.setColor( Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT );
+			dc.drawText( me.centerX, me.pomodoroOffset, Gfx.FONT_MEDIUM, "Pomodoro #" + pomodoroNumber, Gfx.TEXT_JUSTIFY_CENTER );
+		}
+
+		dc.setColor( Gfx.COLOR_LT_GRAY, Gfx.COLOR_TRANSPARENT );
+		dc.drawText( self.centerX, self.timeOffset, Gfx.FONT_NUMBER_MILD, self.getTime(), Gfx.TEXT_JUSTIFY_CENTER );
+	}
+
+	hidden function drawMinutes( dc ) {
+		dc.drawText( me.centerX, me.minutesOffset, Gfx.FONT_NUMBER_THAI_HOT, minutes.format( "%02d" ), Gfx.TEXT_JUSTIFY_CENTER );
+	}
+
+	hidden function drawCaption( dc ) {
+		dc.drawText( me.centerX, me.captionOffset, Gfx.FONT_TINY, me.pomodoroSubtitle, Gfx.TEXT_JUSTIFY_CENTER );
+	}
+
+	function onHide() {
+	}
+
+	function getTime() {
+		var today = Gregorian.info( Time.now(), Time.FORMAT_SHORT );
+		return Lang.format( "$1$:$2$", [
+			today.hour.format( "%02d" ),
+			today.min.format( "%02d" ),
+		] );
+	}
 }

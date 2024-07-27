@@ -3,14 +3,14 @@ using Toybox.Attention as Attention;
 using Toybox.WatchUi as Ui;
 using Toybox.Timer as Timer;
 
-class GarmodoroDelegate extends Ui.BehaviorDelegate {
-    var timer;
-    var tickTimer;
-    var minutes = 0;
-    var pomodoroNumber = 1;
-    var isPomodoroTimerStarted = false;
-    var isBreakTimerStarted = false;
+var timer;
+var tickTimer;
+var minutes = 0;
+var pomodoroNumber = 1;
+var isPomodoroTimerStarted = false;
+var isBreakTimerStarted = false;
 
+class GarmodoroDelegate extends Ui.BehaviorDelegate {
     function initialize() {
         Ui.BehaviorDelegate.initialize();
         timer = new Timer.Timer();
