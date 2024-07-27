@@ -3,27 +3,31 @@ using Toybox.System as System;
 using Toybox.WatchUi as Ui;
 
 class StopMenuDelegate extends Ui.MenuInputDelegate {
-	function initialize() {
-		MenuInputDelegate.initialize();
-	}
+    function initialize() {
+        MenuInputDelegate.initialize();
+    }
 
-	function onMenuItem( item ) {
-		if ( item == :restart ) {
-			play( 9 ); // Attention.TONE_RESET
-			ping( 50, 1500 );
+    function onMenuItem(item) {
+        if (item == :restart) {
+            handleRestart();
+        } else if (item == :exit) {
+            System.exit();
+        }
+    }
 
-			tickTimer.stop();
-			timer.stop();
+    function handleRestart() {
+        play(9); // Attention.TONE_RESET
+        ping(50, 1500);
 
-			resetMinutes();
-			pomodoroNumber = 1;
-			isPomodoroTimerStarted = false;
-			isBreakTimerStarted = false;
-			timer.start( method( :idleCallback ), 60 * 1000, true );
+        tickTimer.stop();
+        timer.stop();
 
-			Ui.requestUpdate();
-		} else if ( item == :exit ) {
-			System.exit();
-		}
-	}
+        resetMinutes();
+        pomodoroNumber = 1;
+        isPomodoroTimerStarted = false;
+        isBreakTimerStarted = false;
+        timer.start(method(:idleCallback), 60 * 1000, true);
+
+        Ui.requestUpdate();
+    }
 }
