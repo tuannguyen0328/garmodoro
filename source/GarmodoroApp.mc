@@ -1,5 +1,7 @@
 using Toybox.Application as App;
 using Toybox.Timer as Timer;
+using Toybox.WatchUi as Ui;
+using Toybox.System as Sys;
 
 class GarmodoroApp extends App.AppBase {
     var timer;
@@ -49,11 +51,51 @@ class GarmodoroApp extends App.AppBase {
         state.put("minutes", minutes);
         state.put("pomodoroNumber", pomodoroNumber);
 
-        tickTimer.stop();
-        timer.stop();
+        if (tickTimer != null) {
+            tickTimer.stop();
+        }
+        if (timer != null) {
+            timer.stop();
+        }
     }
 
     function getInitialView() {
-        return [ new GarmodoroView(), new GarmodoroDelegate() ];
+        return [new GarmodoroView(isPomodoroTimerRunning, isTickTimerRunning, minutes, pomodoroNumber), new GarmodoroDelegate()];
+    }
+
+    function pomodoroCallback() {
+        minutes -= 1;
+        if (minutes == 0) {
+            Utility.ping(100, 1500);
+
+            isPomodoroTimerRunning = false;
+            timer.stop();
+
+            // Switch to break
+            minutes = App.getApp().getProperty(isLongBreak() ? "longBreakLength" : "shortBreakLength");
+            timer.start(method(:breakCallback), 60 * 1000, true);
+        }
+    }
+
+    function breakCallback() {
+        minutes -= 1;
+        if (minutes == 0) {
+            Utility.ping(100, 1500);
+            isTickTimerRunning = false;
+            timer.stop();
+            resetMinutes();
+        }
+    }
+
+    function isLongBreak() {
+        return (pomodoroNumber % App.getApp().getProperty("numberOfPomodorosBeforeLongBreak")) == 0;
+    }
+
+    function resetMinutes() {
+        minutes = App.getApp().getProperty("pomodoroLength");
+    }
+
+    function idleCallback() {
+        Ui.requestUpdate();
     }
 }

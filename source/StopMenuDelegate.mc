@@ -1,33 +1,31 @@
+using Toybox.Application as App;
 using Toybox.Attention as Attention;
-using Toybox.System as System;
 using Toybox.WatchUi as Ui;
 
-class StopMenuDelegate extends Ui.MenuInputDelegate {
+class StopMenuDelegate extends Ui.InputDelegate {
+    var timer;
+    var tickTimer;
+    var minutes = 0;
+    var pomodoroNumber = 1;
+    var isPomodoroTimerStarted = false;
+    var isBreakTimerStarted = false;
+
     function initialize() {
-        MenuInputDelegate.initialize();
+        Ui.InputDelegate.initialize();
     }
 
     function onMenuItem(item) {
-        if (item == :restart) {
-            handleRestart();
-        } else if (item == :exit) {
-            System.exit();
+        if (item == "stop") {
+            stopPomodoro();
         }
     }
 
-    function handleRestart() {
-        play(9); // Attention.TONE_RESET
-        ping(50, 1500);
-
-        tickTimer.stop();
-        timer.stop();
-
-        resetMinutes();
-        pomodoroNumber = 1;
+    function stopPomodoro() {
         isPomodoroTimerStarted = false;
         isBreakTimerStarted = false;
-        timer.start(method(:idleCallback), 60 * 1000, true);
-
-        Ui.requestUpdate();
+        timer.stop();
+        tickTimer.stop();
+        Utility.ping(100, 1500);
+        // Additional logic for stopping the Pomodoro timer
     }
 }
